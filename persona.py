@@ -3,29 +3,25 @@ import Data5Royal
 
 
 class Persona:
-    def __init__(self, arcana: str, level: int, name: str, special: bool, dlc: bool):
+    def __init__(self, arcana: str, level: int, name: str, special: bool, dlc: bool, treasure: bool):
         self.arcana = arcana
         self.level = level
+        self.current_level = level
         self.name = name
         self.owned = False
         self.special = special
         self.dlc = dlc
+        self.treasure_demon = treasure
         self.can_be_fused = False
         self.fusion_material_list = []
 
     def __str__(self):
         # return f'{self.arcana} {self.level} {self.name}'
-        if self.owned:
-            return f'{self.name}'
-        else:
-            return f'[{self.name} can be fused with {self.fusion_material_list}]'
+        return f'{self.name};{self.current_level}'
 
     def __repr__(self):
         # return f'{self.arcana} {self.level} {self.name}'
-        if self.owned:
-            return f'{self.name}'
-        else:
-            return f'[{self.name} can be fused with {self.fusion_material_list}]'
+        return f'{self.name};{self.current_level}'
 
 
 class PersonaAlt:
@@ -66,7 +62,7 @@ class FileReader:
         for index, row in df.iterrows():
             # print(row['Arcana'], row['Level'], row['Name'])
             persona = Persona(row['Arcana'], int(row['Level']), row['Name'], str(row['Special']) == "True",
-                              str(row['DLC']) == "True")
+                              str(row['DLC']) == "True", str(row['Treasure']) == "True")
             persona_list.append(persona)
         print(persona_list)
         return persona_list
@@ -78,6 +74,9 @@ class FileReader:
             for second_persona_index in range(first_persona_index + 1, len(self.persona_list)):
                 p1 = self.persona_list[first_persona_index]
                 p2 = self.persona_list[second_persona_index]
+
+                if (p1.treasure_demon and not p2.treasure_demon) or (p2.treasure_demon and not p1.treasure_demon):
+                    continue
 
                 result_arcana = ""
                 for combo in Data5Royal.arcana2CombosRoyal:
@@ -105,6 +104,10 @@ class FileReader:
     def forward_fusion(self, persona1, persona2):
         p1 = self.persona_map[persona1]
         p2 = self.persona_map[persona2]
+
+        if (p1.treasure_demon and not p2.treasure_demon) or (p2.treasure_demon and not p1.treasure_demon):
+            self.treasure_demon_fusion(persona1, persona2)
+
         result_arcana = ""
         for combo in Data5Royal.arcana2CombosRoyal:
             if combo['source'] == [p1.arcana, p2.arcana] or combo['source'] == [p2.arcana, p1.arcana]:
@@ -118,6 +121,29 @@ class FileReader:
                     continue
                 if persona.arcana == result_arcana and persona.level >= result_level:
                     return persona
+
+    def treasure_demon_fusion(self, persona1, persona2):
+        p1 = self.persona_map[persona1]
+        p2 = self.persona_map[persona2]
+        treasure = p1 if p1.treasure_demon else p2
+        non_treasure = p1 if not p1.treasure_demon else p2
+        arcana_list = [x for x in self.persona_list if x.arcana == non_treasure.arcana and not x.special
+                       and not x.treasure_demon]
+
+        index = Data5Royal.rarePersonaeRoyal.index(treasure.name)
+        rank = Data5Royal.rareCombosRoyal[non_treasure.arcana][index]
+
+        # find "index" of non treasure persona at its current level
+        counter = 0
+        for item in arcana_list:
+            if item.level > non_treasure.current_level:
+                break
+            counter += 1
+        if rank > 0:
+            counter -= 1
+
+        if len(arcana_list) > counter + rank >= 0:
+            return arcana_list[counter + rank]
 
     def create_persona_map(self):
         persona_map = {}
@@ -137,6 +163,6 @@ class FileReader:
                 if not pd.isna(mat):
                     l.append(mat)
             p.fusion_material_list.append(l)
-            self.reverse_fusion_map[p.name] = [tuple(l)]
+            # self.reverse_fusion_map[p.name] = [tuple(l)]
 
     # create_reverse_table()

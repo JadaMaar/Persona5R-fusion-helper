@@ -22,6 +22,7 @@ from difflib import SequenceMatcher
 import PIL.ImageOps
 from threading import Thread
 from keyboard import add_hotkey
+from tkinter import StringVar
 
 
 class PersonaInfo(customtkinter.CTkToplevel):
@@ -36,13 +37,15 @@ class PersonaInfo(customtkinter.CTkToplevel):
         self.name.pack()
         self.level = customtkinter.CTkLabel(self, text=f'Level: {target_persona.level}')
         self.level.pack()
+        self.current_level = customtkinter.CTkLabel(self, text=f'Current Level: {target_persona.current_level}')
+        self.current_level.pack()
         self.arcana = customtkinter.CTkLabel(self, text=f'arcana: {target_persona.arcana}')
         self.arcana.pack()
 
 
 class FusionHelper:
     def __init__(self):
-        self.my_personas = []
+        self.my_personas: list[persona.Persona] = []
         self.file_reader = persona.FileReader()
         self.persona_map = self.file_reader.persona_map
         self._reverse_map = self.file_reader.reverse_fusion_map
@@ -52,6 +55,12 @@ class FusionHelper:
         self._sct = mss.mss()
         self._api = tesserocr.PyTessBaseAPI(lang="eng")
         self._api.SetPageSegMode(7)
+
+        self._number_api = tesserocr.PyTessBaseAPI(lang="eng")
+        self._number_api.SetPageSegMode(tesserocr.PSM.SINGLE_WORD)
+        self._num_detected = 0
+        self._number_api.SetVariable("tessedit_char_whitelist", "0123456789")
+
         self._keyboard = Controller()
         self._load_compendium()
         self._set_owned()
@@ -65,7 +74,6 @@ class FusionHelper:
         Thread(target=self._scan_compendium).start()
 
     def _scan_compendium(self):
-
         self._scan_in_progress = True
 
         personas = []
@@ -88,10 +96,13 @@ class FusionHelper:
         y2 = 335
         height = 75
 
+        lvl_x = 328 #325
+        lvl_y = 302 #300
+
         check_box = self.take_screenshot({"top": 710, "left": 1000, "width": 1, "height": 1})
         started_scroll = False
         i = 0
-
+        self._num_detected = 0
         while self._contains_red(check_box) or not started_scroll:
             # abort scan if _scan_in_progress = False
             if not self._scan_in_progress:
@@ -100,20 +111,22 @@ class FusionHelper:
             # takes a screenshot to the right of the second bottom most persona to check it for red color
             # it will only not be red for the first 6 entries or once the end has been reached
             check_box = self.take_screenshot({"top": 687, "left": 1080, "width": 1, "height": 1})
+            last_check_box = self.take_screenshot({"top": 760, "left": 1080, "width": 1, "height": 1})
+
+            # check is last compendium entry has been reached
+            if not self._contains_red(check_box) and self._contains_red(last_check_box):
+                y1 += height
+                y2 += height
+                lvl_y += height
+                x1 += 16
+                x2 += 16
+                lvl_x += 16
+
             # persona name label screenshot
             im = self.take_screenshot({"top": y1, "left": x1, "width": x2 - x1, "height": y2 - y1})
             im = im.convert('L')
             im = PIL.ImageOps.invert(im)
-
-            # move down 6 entries before the list starts to scroll
-            if not self._contains_red(check_box):
-                y1 += height
-                y2 += height
-                x1 += 16
-                x2 += 16
-                i += 1
-            else:
-                started_scroll = True
+            i += 1
 
             # use ocr to access the text
             self._api.SetImage(im)
@@ -121,25 +134,80 @@ class FusionHelper:
             if text == "":
                 im.show()
                 break
-            print(f'before: {text}')
+            # print(f'before: {text}')
             if text not in self.persona_map.keys():
                 text = self._find_closest_match(text)
 
+            # persona level label screenshot
+            lvl = self.take_screenshot({"top": lvl_y, "left": lvl_x, "width": 45, "height": 46})
+            lvl = PIL.ImageOps.invert(lvl)
+            lvl = self._non_black_to_white(lvl).convert('RGBA').rotate(-6, resample=Image.BICUBIC,
+                                                                       fillcolor=(255, 255, 255))
+
+            # move down 6 entries before the list starts to scroll
+            if not self._contains_red(check_box):
+                y1 += height
+                y2 += height
+                lvl_y += height
+                x1 += 16
+                x2 += 16
+                lvl_x += 16
+            else:
+                started_scroll = True
+
+            Thread(target=self._thread_lvl_ocr(lvl, text)).start()
+
             # add persona name to the list of personas
-            personas.append(text)
-            # im.save('screenshots/' + str(i) + '.png')
+            personas.append(self.persona_map[text])
+
             # go down by one
             self._keyboard.press('s')
             sleep(0.1)
             self._keyboard.release('s')
-            print(f'after: {text}')
+
+            # print(f'after: {text}')
+
+        print(f'{self._num_detected} out of {i} numbers identified correctly')
         self.my_personas = personas
         # save persona list in a compendium.txt
-        self.save_compendium()
         self._set_owned()
+        self.save_compendium()
         self.can_fuse_all()
         self._scan_in_progress = False
         popup.destroy()
+
+    def _thread_lvl_ocr(self, lvl, name):
+        self._number_api.SetImage(lvl)
+        self._number_api.Recognize(0)
+        lvl_text = self._number_api.GetUTF8Text()
+        if lvl_text.replace('\n', '').isnumeric():
+            self.persona_map[name].current_level = int(lvl_text.replace('\n', ''))
+            self._num_detected += 1
+        else:
+            # find the best psm mode for every single screenshot
+            psm = tesserocr.PSM
+            all_modes = [psm.OSD_ONLY, psm.AUTO_OSD, psm.AUTO_ONLY, psm.AUTO, psm.SINGLE_COLUMN,
+                         psm.SINGLE_BLOCK_VERT_TEXT, psm.SINGLE_BLOCK, psm.SINGLE_LINE, psm.SINGLE_WORD,
+                         psm.CIRCLE_WORD, psm.SINGLE_CHAR, psm.SPARSE_TEXT, psm.SPARSE_TEXT_OSD, psm.RAW_LINE]
+            for mode in all_modes:
+                self._number_api.SetPageSegMode(mode)
+                lvl_text = self._number_api.GetUTF8Text()
+                if lvl_text.replace('\n', '').isnumeric():
+                    # set current level to the one from the image
+                    self.persona_map[name].current_level = int(lvl_text.replace('\n', ''))
+                    self._num_detected += 1
+                    return
+            print(f'{name} lvl: {lvl_text}')
+
+    def _non_black_to_white(self, img):
+        image = img.convert('RGBA')
+        pixdata = image.load()
+        # check all pixels for not black color
+        for y in range(image.size[1]):
+            for x in range(image.size[0]):
+                if pixdata[x, y][0] > 2 or pixdata[x, y][1] > 2 or pixdata[x, y][2] > 2:
+                    pixdata[x, y] = (255, 255, 255, 255)
+        return image
 
     def _find_closest_match(self, text):
         max_match_percentage = 0
@@ -154,10 +222,9 @@ class FusionHelper:
     def _set_owned(self):
         # mark all owned persona
         dlc_owned = False
-        for p in self.persona_map.keys():
-            if p in self.my_personas:
-                self.persona_map[p].owned = True
-                dlc_owned = True
+        for p in self.my_personas:
+            self.persona_map[p.name].owned = True
+            dlc_owned = True
         # mark all dlc personas as owned if one is owned
         if dlc_owned:
             for value in self.persona_map.values():
@@ -168,7 +235,7 @@ class FusionHelper:
         new = []
         for p in self.persona_map.values():
             if p.owned:
-                new.append(p.name)
+                new.append(p)
         self.my_personas = new
         # update which personas can be fused after change
         self.can_fuse_all()
@@ -207,6 +274,7 @@ class FusionHelper:
 
     # flooding the entire compendium to find every persona that is somehow fusible
     def _can_fuse_iterative(self):
+        treasure_demons = [x for x in self.persona_map.values() if x.owned and x.treasure_demon]
         while True:
             stop = True
             for p in self.persona_map.keys():
@@ -231,6 +299,15 @@ class FusionHelper:
                                 self.persona_map[p].fusion_material_list.append([pair[0], pair[1]])
                                 self.persona_map[p].can_be_fused = True
                                 stop = False
+            for treasure_demon in treasure_demons:
+                for p in self.persona_map.values():
+                    if (p.owned or p.can_be_fused) and not p.treasure_demon:
+                        result = self.file_reader.treasure_demon_fusion(treasure_demon.name, p.name)
+                        if result is not None:
+                            if not result.can_be_fused and not result.owned:
+                                self.persona_map[result.name].fusion_material_list.append([treasure_demon.name, p.name])
+                                self.persona_map[result.name].can_be_fused = True
+                                stop = False
             # stop if after a full cycle no new recipes have been added
             if stop:
                 break
@@ -245,15 +322,17 @@ class FusionHelper:
                 center_popup(CTkMessagebox(title="Info", message="This Persona is already owned"))
             else:
                 # resolve_persona_fusion(target_persona)
-                print(self._reverse_map[target_persona])
+                if target_persona in self._reverse_map:
+                    print(self._reverse_map[target_persona])
                 # check that the material list is not empty
                 if p.fusion_material_list:
                     self._resolve_list(p.fusion_material_list[0])
                     self._list_to_graph(p.fusion_material_list[0], p.name)
                 print(p.fusion_material_list[0])
                 print(len(p.fusion_material_list))
-                print(self._reverse_map[target_persona])
-                print(len(self._reverse_map[target_persona]))
+                if target_persona in self._reverse_map:
+                    print(self._reverse_map[target_persona])
+                    print(len(self._reverse_map[target_persona]))
         else:
             center_popup(
                 CTkMessagebox(title="Error", message="This Persona does not exist. Please check again.", icon="cancel"))
@@ -370,14 +449,15 @@ class FusionHelper:
     def save_compendium(self):
         with open('compendium.txt', 'w') as f:
             for p in self.my_personas:
-                f.write(p + "\n")
+                f.write(str(p) + "\n")
 
     def _load_compendium(self):
         # read compendium.txt if available and write its content in my_personas
         if os.path.isfile('compendium.txt'):
             with open('compendium.txt', 'r') as f:
                 for line in f:
-                    self.my_personas.append(line.replace("\n", ""))
+                    info = line.replace("\n", "").split(";")
+                    self.my_personas.append(persona.Persona("", int(info[1]), info[0], False, False, False))
 
 
 class Compendium(customtkinter.CTkToplevel):
@@ -386,17 +466,30 @@ class Compendium(customtkinter.CTkToplevel):
         self.title("Compendium")
         self.compendium = compendium
         self.fusion_helper = fusion_helper
+
+        # GUI
+        sv = StringVar()
+        sv.trace("w", lambda name, index, mode, sv=sv: self._callback(sv))
+        self.search_field = customtkinter.CTkEntry(self, placeholder_text="search...", textvariable=sv)
+        self.search_field.pack(padx=10, pady=10)
         self.compendium_container = customtkinter.CTkScrollableFrame(self, width=200, height=200)
         self.compendium_container.pack(padx=10, pady=10)
         self.apply_button = customtkinter.CTkButton(self, text="Apply", command=lambda: self._apply())
         self.apply_button.pack(padx=10, pady=10)
         self.persona_checkboxes = {}
         for p in compendium.values():
-            box = customtkinter.CTkCheckBox(self.compendium_container, text=p.name)
+            box = customtkinter.CTkCheckBox(self.compendium_container, text=f'{p.name} ({p.current_level})')
             self.persona_checkboxes[p.name] = box
             if p.owned:
                 box.select()
             box.pack(pady=5, anchor='w')
+
+    def _callback(self, sv: StringVar):
+        for box in self.persona_checkboxes.keys():
+            self.persona_checkboxes[box].pack_forget()
+        for box in self.persona_checkboxes.keys():
+            if box.lower().startswith(sv.get().lower()):
+                self.persona_checkboxes[box].pack(pady=5, anchor='w')
 
     def _apply(self):
         for name, box in self.persona_checkboxes.items():
@@ -434,7 +527,6 @@ for p in helper.persona_map.values():
         # print(p)
         c += 1
 print(f'{c} personas owned')
-# helper.take_screenshot({"top": 687, "left": 1080, "width": 1, "height": 1}).show()
 
 # setup UI
 customtkinter.set_appearance_mode("System")

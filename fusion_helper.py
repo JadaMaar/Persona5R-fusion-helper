@@ -65,6 +65,10 @@ class FusionHelper:
         self._load_compendium()
         self._set_owned()
         self._scan_in_progress = False
+        self._current_node = None
+        self._node_to_label: dict[str, plt.text] = {}
+        self._current_graph_personas = []
+        self._current_indices = {}
         add_hotkey("esc", lambda: self._scan_in_progress)
 
     def _abort_scan(self):
@@ -96,8 +100,8 @@ class FusionHelper:
         y2 = 335
         height = 75
 
-        lvl_x = 328 #325
-        lvl_y = 302 #300
+        lvl_x = 328  # 325
+        lvl_y = 302  # 300
 
         check_box = self.take_screenshot({"top": 710, "left": 1000, "width": 1, "height": 1})
         started_scroll = False
@@ -312,7 +316,10 @@ class FusionHelper:
             if stop:
                 break
 
-    def can_fuse(self, target_persona):
+    def can_fuse(self, target_persona, indices: dict = None):
+        if indices is None:
+            indices = {}
+        self._current_indices = indices
         start = time()
         if target_persona in self.persona_map.keys():
             p = self.persona_map[target_persona]
@@ -324,32 +331,46 @@ class FusionHelper:
                 # resolve_persona_fusion(target_persona)
                 if target_persona in self._reverse_map:
                     print(self._reverse_map[target_persona])
+
+                if p.name in indices.keys():
+                    index = indices[p.name]
+                else:
+                    index = 0
+
                 # check that the material list is not empty
                 if p.fusion_material_list:
-                    self._resolve_list(p.fusion_material_list[0])
-                    self._list_to_graph(p.fusion_material_list[0], p.name)
-                print(p.fusion_material_list[0])
+                    self._current_graph_personas = self._resolve_list(p.fusion_material_list[index].copy(), indices)
+                    self._list_to_graph(self._current_graph_personas, p.name)
+                print(p.fusion_material_list[index])
                 print(len(p.fusion_material_list))
                 if target_persona in self._reverse_map:
                     print(self._reverse_map[target_persona])
                     print(len(self._reverse_map[target_persona]))
+                return len(p.fusion_material_list)
         else:
             center_popup(
                 CTkMessagebox(title="Error", message="This Persona does not exist. Please check again.", icon="cancel"))
         # print(total_material_list)
         print(f"Duration: {time() - start}")
+        return 0
 
-    def _resolve_list(self, persona_list):
+    # turn given list into one that only contains owned personas
+    def _resolve_list(self, persona_list, indices):
         copy_list = persona_list.copy()
         for c in copy_list:
             if isinstance(c, list):
                 continue
             if not self.persona_map[c].owned:
+                if c in indices.keys():
+                    index = indices[c]
+                else:
+                    index = 0
                 # replace not owned persona by its first fusion_material_list entry
                 persona_list.remove(c)
-                persona_list.append(self.persona_map[c].fusion_material_list[0])
+                persona_list.append(self.persona_map[c].fusion_material_list[index])
                 l = persona_list[-1]
-                self._resolve_list(l)
+                self._resolve_list(l, indices)
+        return persona_list
 
     def _list_to_graph(self, persona_list: list, target_persona):
         list_copy = persona_list.copy()
@@ -376,8 +397,9 @@ class FusionHelper:
         nx.draw(H, with_labels=True, pos=self._pos)
 
         for node, (x, y) in self._pos.items():
-            plt.text(x, y, str(node), ha='center', va='center',
-                     bbox=dict(facecolor='white', edgecolor='gray', boxstyle='round,pad=0.2'))
+            self._node_to_label[node] = plt.text(x, y, str(node), ha='center', va='center',
+                                                 bbox=dict(facecolor='white', edgecolor='gray',
+                                                           boxstyle='round,pad=0.2'))
 
         # Clear the previous canvas if it exists
         if self._canvas != "":
@@ -388,11 +410,12 @@ class FusionHelper:
         self._canvas.get_tk_widget().pack(fill=tkinter.BOTH, expand=True)
 
         self._canvas.mpl_connect('button_press_event', self._click_node)
-
         # plt.draw()
         plt.show()
 
     def _click_node(self, event):
+        global current_node
+        print(event)
         # Get the clicked node data from the event object
         if event.xdata is not None and event.ydata is not None:
             x, y = event.xdata, event.ydata
@@ -404,8 +427,18 @@ class FusionHelper:
 
             if node is not None:
                 print(f"Clicked node: {node}")
-                # open persona information pop-up in the middle of the parent window
-                center_popup(PersonaInfo(self.persona_map[node]))
+                # left click
+                if event.button == 1:
+                    # open persona information pop-up in the middle of the parent window
+                    center_popup(PersonaInfo(self.persona_map[node]))
+                # right click
+                if event.button == 3:
+                    # TODO: change color when node is selected (not working for some reason)
+                    if self._current_node is not None:
+                        self._node_to_label[self._current_node].set_color('white')
+                    self._current_node = node
+                    self._node_to_label[self._current_node].set_color('red')
+                    set_current_node(node)
 
     def _graph_recursive(self, g: nx.Graph, root, persona_list: list):
         for p in persona_list:
@@ -518,8 +551,65 @@ def open_compendium():
     compendium_popup.grab_set()
 
 
+def check_fusion(name):
+    global result_index, max_index, index_dict
+    result_index = 0
+    index_dict = {}
+    max_index = helper.can_fuse(target_persona=name, indices=index_dict)
+    print(max_index)
+    left.configure(state="disable", image=arrow_l_disabled)
+    right.configure(state="disabled", image=arrow_r_disabled)
+
+
+def next_recipe():
+    global result_index
+    left.configure(state="normal", image=arrow_l)
+    if result_index + 1 < max_index:
+        result_index += 1
+        index_dict[current_node] = result_index
+        helper.can_fuse(target_persona=text_field.get(), indices=index_dict)
+    if result_index + 1 >= max_index:
+        right.configure(state="disabled", image=arrow_r_disabled)
+
+
+def previous_recipe():
+    global result_index
+    right.configure(state="normal", image=arrow_r)
+    if result_index - 1 >= 0:
+        result_index -= 1
+        index_dict[current_node] = result_index
+        helper.can_fuse(target_persona=text_field.get(), indices=index_dict)
+    if result_index - 1 < 0:
+        left.configure(state="disabled", image=arrow_l_disabled)
+
+
+def set_current_node(value):
+    global current_node, result_index, max_index
+    current_node = value
+    if current_node not in index_dict.keys():
+        result_index = 0
+        index_dict[current_node] = 0
+    else:
+        result_index = index_dict[current_node]
+    # disable right arrow if there is only one recipe or the last one is already selected
+    max_index = len(helper.persona_map[current_node].fusion_material_list)
+    if max_index <= 1 or result_index == max_index - 1:
+        right.configure(state="disabled", image=arrow_r_disabled)
+    else:
+        right.configure(state="normal", image=arrow_r)
+    # disable left arrow if the first recipe is selected
+    if result_index == 0:
+        left.configure(state="disabled", image=arrow_l_disabled)
+    else:
+        left.configure(state="normal", image=arrow_l)
+
+
 helper = FusionHelper()
 helper.can_fuse_all()
+index_dict = {}
+current_node = ""
+result_index = 0
+max_index = 0
 # Compendium(helper.persona_map.values())
 c = 0
 for p in helper.persona_map.values():
@@ -529,7 +619,7 @@ for p in helper.persona_map.values():
 print(f'{c} personas owned')
 
 # setup UI
-customtkinter.set_appearance_mode("System")
+customtkinter.set_appearance_mode("Dark")
 customtkinter.set_default_color_theme("blue")
 
 app = customtkinter.CTk()
@@ -552,8 +642,20 @@ dropdown = CTkScrollableDropdown(text_field, values=helper.persona_map.values(),
 scan = customtkinter.CTkButton(app, text="Scan Compendium", command=lambda: helper.scan_compendium())
 scan.grid(row=1, column=0, padx=10, pady=10)
 
-check = customtkinter.CTkButton(app, text="Check", command=lambda: helper.can_fuse(text_field.get()))
+check = customtkinter.CTkButton(app, text="Check", command=lambda: check_fusion(text_field.get()))
 check.grid(row=2, column=0, padx=10, pady=10)
+
+arrow_l = customtkinter.CTkImage(dark_image=Image.open("arrow_l.png"))
+arrow_l_disabled = customtkinter.CTkImage(dark_image=Image.open("arrow_l_disabled.png"))
+left = customtkinter.CTkButton(app, text="", width=10, command=lambda: previous_recipe(), image=arrow_l_disabled,
+                               state="disabled")
+left.place(x=210, y=106)
+
+arrow_r = customtkinter.CTkImage(dark_image=Image.open("arrow_r.png"))
+arrow_r_disabled = customtkinter.CTkImage(dark_image=Image.open("arrow_r_disabled.png"))
+right = customtkinter.CTkButton(app, text="", width=10, command=lambda: next_recipe(), image=arrow_r_disabled,
+                                state="disabled")
+right.place(x=394, y=106)
 
 plotframe = customtkinter.CTkFrame(master=app, fg_color="white", width=640, height=480)
 plotframe.grid(row=3, column=0)

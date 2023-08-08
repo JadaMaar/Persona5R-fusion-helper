@@ -182,7 +182,7 @@ class CTkScrollableDropdown(customtkinter.CTkToplevel):
                                                           image=self.image_values[i] if self.image_values is not None else None,
                                                           anchor=self.justify,
                                                           command=lambda k=row.name: self._attach_key_press(k), **button_kwargs)
-            if not row.can_be_fused and not row.treasure_demon:
+            if not row.can_be_fused:
                 self.widgets[self.i].configure(state='disabled')
             self.widgets[self.i].pack(fill="x", pady=2, padx=(self.padding, 0))
             self.i+=1

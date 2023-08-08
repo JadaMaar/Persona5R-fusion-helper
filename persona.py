@@ -1,5 +1,6 @@
 import pandas as pd
 import Data5Royal
+import math
 
 
 class Persona:
@@ -50,8 +51,8 @@ class PersonaAlt:
 class FileReader:
     def __init__(self):
         self.persona_list = self.excel_to_persona('G:\Documents\Persona5R fusion helper\compendium.xlsx')
-        self.reverse_fusion_map = self.create_reverse_table()
         self.persona_map = self.create_persona_map()
+        self.reverse_fusion_map = self.create_reverse_table()
         self.add_special_fusions()
 
     def excel_to_persona(self, path):
@@ -87,15 +88,12 @@ class FileReader:
                 result_level += 1 if result_level.is_integer() else 0.5
 
                 if result_arcana != "":
-                    for persona in self.persona_list:
-                        if persona.special:
-                            continue
-                        if persona.arcana == result_arcana and persona.level >= result_level:
-                            if persona.name in reverse_fusion_map.keys():
-                                reverse_fusion_map.get(persona.name).append((p1.name, p2.name))
-                            else:
-                                reverse_fusion_map[persona.name] = [(p1.name, p2.name)]
-                            break
+                    persona = self.forward_fusion(p1.name, p2.name)
+                    if persona is not None:
+                        if persona.name in reverse_fusion_map.keys():
+                            reverse_fusion_map.get(persona.name).append((p1.name, p2.name))
+                        else:
+                            reverse_fusion_map[persona.name] = [(p1.name, p2.name)]
 
         # print(reverse_fusion_map)
         # print(len(reverse_fusion_map))
@@ -113,14 +111,23 @@ class FileReader:
             if combo['source'] == [p1.arcana, p2.arcana] or combo['source'] == [p2.arcana, p1.arcana]:
                 result_arcana = combo['result']
                 break
-        result_level = (p1.level + p2.level) / 2
-        result_level += 1 if result_level.is_integer() else 0.5
+        result_level = math.floor((p1.level + p2.level) / 2) + 1
         if result_arcana != "":
-            for persona in self.persona_map.values():
-                if persona.special:
-                    continue
-                if persona.arcana == result_arcana and persona.level >= result_level:
-                    return persona
+            result_arcana_list = [x for x in self.persona_list if x.arcana == result_arcana]
+            if p1.arcana != p2.arcana:
+                # different arcana fusion
+                for persona in result_arcana_list:
+                    if persona.special or persona.treasure_demon:
+                        continue
+                    if persona.level >= result_level:
+                        return persona
+            else:
+                # same arcana fusion
+                for persona in reversed(result_arcana_list):
+                    if persona.special or persona.treasure_demon or persona == p1 or persona == p2:
+                        continue
+                    if persona.level <= result_level:
+                        return persona
 
     def treasure_demon_fusion(self, persona1, persona2):
         p1 = self.persona_map[persona1]

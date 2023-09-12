@@ -1,0 +1,191 @@
+Arsene;1;1591
+Obariyon;14;3528
+Orpheus F;14;3687
+Orpheus F Picaro;29;0
+High Pixie;19;4867
+Izanagi;20;5175
+Izanagi Picaro;48;60
+Orpheus;26;7308
+Orpheus Picaro;13;3451
+Legion;8;13407
+Ose;47;19287
+Bugs;53;23688
+Raoul;80;56175
+Vishnu;9;61143
+Satanael;99;81697
+Jack-o'-Lantern;2;1647
+Cait Sith;5;1897
+Jack Frost;11;2887
+Nekomata;18;4477
+Sandman;25;9000
+Choronzon;28;8127
+Queen Mab;49;20941
+Rangda;48;19752
+Forneus;69;38463
+Surt;87;58632
+Futsunushi;92;65011
+Silky;6;2952
+Apsaras;11;2952
+Koh-i-Noor;25;13597
+Isis;26;7441
+Kikuri-Hime;40;14371
+Sarasvati;56;25800
+Skadi;58;28008
+Scathach;83;53712
+Cybele;89;61143
+Yaksini;26;7441
+Lamia;26;7575
+Hariti;41;15169
+Dakini;50;21672
+Titania;56;25800
+Kali;63;32712
+Alilat;81;51037
+Mother Harlot;91;63708
+Regent;10;3528
+Eligor;16;3937
+Setanta;25;7047
+Thoth;37;13032
+Barong;52;22668
+King Frost;63;37143
+Oberon;69;38463
+Baal;82;52200
+Berith;11;2952
+Orobas;19;4968
+Anzu;4;7987
+Daisoujou;46;18375
+Mishaguji;58;28008
+Bishamonten;13;42217
+Kohryu;82;52200
+Pixie;2;1647
+Saki Mitama;12;3157
+Ame-no-Uzume;25;7308
+Leanan Sidhe;21;5497
+Kushinada;5;17707
+Narcissus;48;19519
+Parvati;62;31801
+Raphael;83;59881
+Ishtar;90;62419
+Agathion;4;2047
+Slime;10;2583
+Shiki-Ouji;23;8412
+Kin-Ki;25;6919
+Ara Mitama;36;12121
+White Rider;43;16411
+Athena;46;0
+Athena Picaro;50;0
+Cerberus;55;25531
+Thor;64;33327
+Angel;9;2419
+Archangel;18;4572
+Principality;33;10741
+Power;41;15169
+Melchizedek;60;34575
+Dominion;70;38797
+Uriel;84;54967
+Metatron;94;67657
+Koropokguru;9;2419
+Ippon-Datara;13;3301
+Sudama;17;4200
+Naga;24;6543
+Kurama Tengu;31;12300
+Arahabaki;35;12121
+Loa;76;45061
+Fafnir;92;65011
+Stone of Scone;20;9457
+Clotho;30;9303
+Ariadne;30;60
+Lachesis;38;13407
+Ariadne Picaro;42;0
+Fortuna;52;23175
+Norn;55;25263
+Asterius;62;60
+Asterius Picaro;66;60
+Lakshmi;75;44341
+Kelpie;6;2007
+Shiisaa;15;3769
+Oni;20;5175
+Rakshasa;24;6667
+Orlov;30;19287
+Valkyrie;44;17052
+Hanuman;70;39469
+Chimera;80;50269
+Zaou-Gongen;86;57397
+Hua Po;9;2419
+Inugami;14;3528
+Orthrus;21;5497
+Emperor's Amulet;35;25800
+Hecatoncheires;45;17707
+Moloch;60;29148
+Macabre;13;42217
+Matador;17;0
+Pisaca;37;15783
+Hell Biker;37;0
+Pale Rider;59;28861
+Chernobog;62;31500
+Thanatos;65;0
+Thanatos Picaro;69;0
+Mot;78;48001
+Genbu;13;3301
+Koppa Tengu;11;3937
+Mitra;37;15783
+Byakko;51;21919
+Gabriel;82;52200
+Incubus;5;1932
+Flauros;19;4968
+Andras;4;7575
+Lilim;33;10575
+Baphomet;64;33637
+Nebiros;74;42919
+Belial;82;51423
+Belphegor;39;13788
+Red Rider;41;15169
+Magatsu-Izanagi;4;0
+Seth;51;22417
+Black Rider;59;28575
+Mara;13;42217
+Kodama;11;2761
+Fuu-Ki;23;8703
+Neko Shogun;31;9612
+Kaiwan;45;21672
+Garuda;55;25263
+Hastur;90;69000
+Lucifer;98;73111
+Succubus;7;2175
+Onmoraki;13;3375
+Kaguya;16;60
+Black Ooze;18;4572
+Sui-Ki;24;6543
+Kaguya Picaro;28;60
+Mothman;33;10575
+Girimehkala;43;16837
+Tsukiyomi;53;60
+Tsukiyomi Picaro;1;60
+Lilith;65;34261
+Byakhee;76;45423
+Suzaku;16;6181
+Thunderbird;34;11077
+Mithras;39;14175
+Horus;47;19287
+Anubis;34;11247
+Trumpeter;59;28575
+Yamata-no-Orochi;69;38463
+Abaddon;80;50269
+Messiah;81;0
+Shiva;87;58632
+Michael;87;58632
+Messiah Picaro;95;0
+Satan;97;78781
+Phoenix;23;6181
+Tam Lin;31;12481
+Unicorn;41;15169
+Okuninushi;58;28008
+Siegfried;89;61143
+Nigi Mitama;23;6181
+Decarabia;32;0
+Ananta;48;20223
+Yatagarasu;61;30607
+Seiryu;65;39132
+Dionysus;76;45423
+Vohu Manah;85;56175
+Izanagi-no-Okami;80;7
+Izanagi-no-Okami Picaro;97;71727

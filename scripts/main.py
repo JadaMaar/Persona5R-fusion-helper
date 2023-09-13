@@ -13,6 +13,7 @@ from scripts.compendium import Compendium
 from fusion_helper import FusionHelper
 from scripts.data_path import resource_path
 from scripts.image_button import ImageButton
+from scripts.loading_screen import LoadingScreen
 from slink import SLink
 from tutorial import HelpWindow
 import pygetwindow as gw
@@ -208,6 +209,7 @@ customtkinter.set_appearance_mode("Dark")
 customtkinter.set_default_color_theme("blue")
 
 app = customtkinter.CTk()
+loading_screen = LoadingScreen()
 app.geometry("643x667")
 # 643x627
 app.title("Persona 5 Royal Fusion Helper")
@@ -290,5 +292,5 @@ helper.set_dropdown(dropdown)
 add_to_compendium = customtkinter.CTkButton(app, text='Add Persona(s)', state='disabled',
                                             command=lambda: add_personas())
 add_to_compendium.grid(row=5, column=0, pady=5)
-
+loading_screen.destroy()
 app.mainloop()

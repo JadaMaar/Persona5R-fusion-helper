@@ -4,6 +4,8 @@
 At this point in time this feature will only work with 1080p monitors.<br>
 Scanning takes screenshots of your Compendium and utilizes Tesseract OCR to determine the name, price and current level of all owned Personas. The number recognition can be a bit faulty in rare cases but to mitigate this all scanned levels which are lower than the Persona's base level will be ignored.
 Pressing ESC during the scan will abort it.
+
+
 ![slink](./example_gifs/scan.gif)
 
 ## Graph

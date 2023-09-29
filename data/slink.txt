@@ -1,0 +1,23 @@
+Fool:False
+Magician:False
+Priestess:False
+Empress:False
+Emperor:False
+Hierophant:False
+Lovers:False
+Chariot:False
+Justice:False
+Hermit:False
+Fortune:False
+Strength:False
+Hanged Man:False
+Death:False
+Temperance:False
+Devil:False
+Tower:False
+Star:False
+Moon:False
+Sun:False
+Judgement:False
+Faith:False
+Councillor:False

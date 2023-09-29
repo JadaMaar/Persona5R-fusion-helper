@@ -36,7 +36,7 @@ class Compendium(CTkToplevel):
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
 
     def _init_checkboxes(self, compendium):
-        img = CTkImage(dark_image=Image.open(resource_path('Assets/info.png')), size=(15, 15))
+        img = CTkImage(dark_image=Image.open(resource_path('Assets/info1.png')), size=(15, 15))
         for p in compendium.values():
             combo = CTkFrame(self.compendium_container)
             combo.pack(anchor='w')

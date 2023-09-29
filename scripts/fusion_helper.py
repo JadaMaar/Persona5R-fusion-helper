@@ -52,8 +52,9 @@ class FusionHelper:
         if len(windows) > 1:
             win = windows[1]
         else:
-            self.center_popup(CTkMessagebox(title="Error", icon="cancel", message="Game could not be found.\n"
-                                                                                  "Please start the game and try again"))
+            self.center_popup(CTkMessagebox(title="Error", icon=resource_path('Assets\\cancel.png'),
+                                            message="Game could not be found.\n"
+                                                    "Please start the game and try again"))
             return
         win.activate()
         sleep(0.5)
@@ -115,7 +116,7 @@ class FusionHelper:
                                                   p in personas)
                         # violate_dlc_use = not self.use_dlc and any(self.persona_map[p].dlc for p in personas)
                         # check if both materials for the recipe are owned or can be fused
-                        if own_or_can_fuse_all:# and not violate_dlc_use:
+                        if own_or_can_fuse_all:  # and not violate_dlc_use:
                             # avoid duplicate recipe being added (shouldnt be possible)
                             # if [pair[0], pair[1]] not in self.persona_map[p].fusion_material_list:
                             if not self.persona_map[p].special:
@@ -156,13 +157,13 @@ class FusionHelper:
             if p.owned:
                 print(p.name)
                 print("This Persona is already owned")
-                self.center_popup(CTkMessagebox(title="Info", message="This Persona is already owned"))
+                self.center_popup(CTkMessagebox(title="Info", icon=resource_path('Assets\\info.png'), message="This Persona is already owned"))
             elif p.ultimate and not self.slink_map[p.arcana]:
                 self.center_popup(
-                    CTkMessagebox(title="Info", message=f"This Persona requires the {p.arcana} Arcana "
+                    CTkMessagebox(title="Info", icon=resource_path('Assets\\info.png'), message=f"This Persona requires the {p.arcana} Arcana "
                                                         "maxed out in order to be fused."))
             elif not p.can_be_fused:
-                self.center_popup(CTkMessagebox(title="Info", message="This Persona cannot be fused with "
+                self.center_popup(CTkMessagebox(title="Info", icon=resource_path('Assets\\info.png'), message="This Persona cannot be fused with "
                                                                       "the current Compendium."))
             else:
                 # resolve_persona_fusion(target_persona)
@@ -181,7 +182,8 @@ class FusionHelper:
                 return len(p.fusion_material_list)
         else:
             self.center_popup(
-                CTkMessagebox(title="Error", message="This Persona does not exist. Please check again.", icon="cancel"))
+                CTkMessagebox(title="Error", message="This Persona does not exist. Please check again.",
+                              icon=resource_path('Assets\\cancel.png')))
         # print(total_material_list)
         print(f"Duration: {time() - start}")
         return 0

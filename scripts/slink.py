@@ -29,7 +29,7 @@ class SLink(CTkToplevel):
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
 
     def _init_checkboxes(self, fusion_helper):
-        img = CTkImage(dark_image=Image.open(resource_path('Assets/info.png')), size=(15, 15))
+        img = CTkImage(dark_image=Image.open(resource_path('Assets/info1.png')), size=(15, 15))
         for arcana in self.all_arcana:
             combo = CTkFrame(self.slink_container)
             combo.pack(anchor='w')

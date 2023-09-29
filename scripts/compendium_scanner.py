@@ -47,7 +47,7 @@ class CompendiumScanner:
         text = self._api.GetUTF8Text().replace("\n", "")
         print(text)
         if text != "Check Compendium" and "Check Registry" not in text:
-            self._center_popup(CTkMessagebox(title="Info", message="Please go to the Compendium Screen."))
+            self._center_popup(CTkMessagebox(title="Info", icon=resource_path('Assets\\info.png'), message="Please go to the Compendium Screen."))
             return False
         registered_only_screenshot = self.take_screenshot({"top": 70, "left": 620, "width": 250, "height": 120})
         registered_only_screenshot = registered_only_screenshot.rotate(-21, resample=Image.BICUBIC, fillcolor=(255, 255, 255))
@@ -64,7 +64,7 @@ class CompendiumScanner:
                 contains_black = True
                 break
         if contains_black:
-            self._center_popup(CTkMessagebox(title="Info", message="Please hover over the first Compendium entry."))
+            self._center_popup(CTkMessagebox(title="Info", icon=resource_path('Assets\\info.png'), message="Please hover over the first Compendium entry."))
             return False
         return True
 

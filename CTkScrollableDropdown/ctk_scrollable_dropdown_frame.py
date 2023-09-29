@@ -6,6 +6,9 @@ Author: Akash Bora
 import customtkinter
 import sys
 
+import keyboard
+
+
 class CTkScrollableDropdownFrame(customtkinter.CTkFrame):
     
     def __init__(self, attach, x=None, y=None, button_color=None, height: int = 200, width: int = None,
@@ -101,6 +104,9 @@ class CTkScrollableDropdownFrame(customtkinter.CTkFrame):
 
         if self.autocomplete:
             self.bind_autocomplete()
+
+        # add hotkey
+        keyboard.add_hotkey('esc', self._hotkey)
         
     def _withdraw(self):
         if self.hide is False: self.place_forget()
@@ -129,13 +135,16 @@ class CTkScrollableDropdownFrame(customtkinter.CTkFrame):
         self.widgets = {}
         for row in self.values:                                
             self.widgets[self.i] = customtkinter.CTkButton(self.frame,
-                                                          text=row,
+                                                          text=row.name,
                                                           height=self.button_height,
                                                           fg_color=self.button_color,
                                                           text_color=self.text_color,
                                                           image=self.image_values[i] if self.image_values is not None else None,
                                                           anchor=self.justify,
                                                           command=lambda k=row: self._attach_key_press(k), **button_kwargs)
+            if not row.can_be_fused:
+                color = "green" if row.owned else "dark red"
+                self.widgets[self.i].configure(state='disabled', text_color_disabled=color)
             self.widgets[self.i].pack(fill="x", pady=2, padx=(self.padding, 0))
             self.i+=1
              
@@ -184,8 +193,15 @@ class CTkScrollableDropdownFrame(customtkinter.CTkFrame):
         self.fade = False
         self.place_forget()
         self.hide = True
+
+    def _hotkey(self):
+        self.fade = False
+        self.fade_out()
+        self.withdraw()
+        self.hide = True
             
     def live_update(self, string=None):
+        print(string)
         if not self.appear: return
         if self.disable: return
         if self.fade: return
@@ -193,8 +209,8 @@ class CTkScrollableDropdownFrame(customtkinter.CTkFrame):
             self._deiconify()
             i=1
             for key in self.widgets.keys():
-                s = self.widgets[key].cget("text")
-                if not s.startswith(string):
+                s = self.widgets[key].cget("text").lower()
+                if not s.startswith(string.lower()):
                     self.widgets[key].pack_forget()
                 else:
                     self.widgets[key].pack(fill="x", pady=2, padx=(self.padding, 0))

@@ -167,7 +167,7 @@ def add_personas():
     helper.save_compendium()
     compendium_popup.update_checkboxes()
     dropdown.configure(values=helper.persona_map.values())
-    center_popup(CTkMessagebox(title='info', message=message))
+    center_popup(CTkMessagebox(title='info', icon=resource_path('Assets\\info.png'), message=message))
     add_to_compendium.configure(state='disabled')
 
 
@@ -254,7 +254,7 @@ cost_frame = customtkinter.CTkFrame(master=app, fg_color='gray14')
 cost_frame.place(x=10, y=110)
 cost_label = customtkinter.CTkLabel(master=cost_frame, text="Cost: N/A", text_color="white", font=('Helvetica', 15))
 cost_label.pack(side='left')
-img = customtkinter.CTkImage(dark_image=Image.open(resource_path('Assets/info.png')), size=(15, 15))
+img = customtkinter.CTkImage(dark_image=Image.open(resource_path('Assets/info1.png')), size=(15, 15))
 cost_info = customtkinter.CTkLabel(master=cost_frame, text='', image=img)
 CTkToolTip(cost_info, message='This calculation uses Persona(s)\n with a cost of ¥0')
 

@@ -12,6 +12,8 @@ from PIL import Image
 import PIL.ImageOps
 from keyboard import add_hotkey
 from pynput.keyboard import Controller, Key
+from screeninfo import get_monitors
+
 
 from scripts.data_path import resource_path
 
@@ -33,6 +35,16 @@ class CompendiumScanner:
         self._scan_in_progress = False
         add_hotkey("esc", self._abort_scan)
 
+        # boxes for 1080p
+        self._x_modifier = 1
+        self._y_modifier = 1
+        self._compendium_screen_box = {"top": 780, "left": 1620, "width": 230, "height": 50}
+        self._registered_only_box = {"top": 70, "left": 620, "width": 250, "height": 120}
+        self._first_selected_box = {"top": 260, "left": 590, "width": 40, "height": 20}
+
+        self._screenshot_boxes = [self._compendium_screen_box, self._registered_only_box, self._first_selected_box]
+        self._monitor_setup()
+
         # flag to differentiate Orpheus (Picaro) and Orpheus F (Picaro) the first instance or Orpheus is M
         # which will set the flag to indicate the next instance to be Orpheuse F
         self.orpheus_f = False
@@ -42,14 +54,15 @@ class CompendiumScanner:
         self._scan_in_progress = False
 
     def check_conditions(self):
-        compendium_screenshot = self.take_screenshot({"top": 780, "left": 1620, "width": 230, "height": 50})
+        compendium_screenshot = self.take_screenshot(self._compendium_screen_box)
         self._api.SetImage(compendium_screenshot)
         text = self._api.GetUTF8Text().replace("\n", "")
         print(text)
         if text != "Check Compendium" and "Check Registry" not in text:
-            self._center_popup(CTkMessagebox(title="Info", icon=resource_path('Assets\\info.png'), message="Please go to the Compendium Screen."))
+            self._center_popup(CTkMessagebox(title="Info", icon=resource_path('Assets\\info.png'),
+                                             message="Please go to the Compendium Screen."))
             return False
-        registered_only_screenshot = self.take_screenshot({"top": 70, "left": 620, "width": 250, "height": 120})
+        registered_only_screenshot = self.take_screenshot(self._registered_only_box)
         registered_only_screenshot = registered_only_screenshot.rotate(-21, resample=Image.BICUBIC, fillcolor=(255, 255, 255))
         self._api.SetImage(registered_only_screenshot)
         text = self._api.GetUTF8Text().replace("\n", "")
@@ -57,33 +70,38 @@ class CompendiumScanner:
         if text != "Registered":
             self._keyboard.press(Key.tab)
             time.sleep(0.5)
-        first_selected_screenshot = self.take_screenshot({"top": 260, "left": 590, "width": 40, "height": 20}).convert('L')
+        first_selected_screenshot = self.take_screenshot(self._first_selected_box).convert('L')
         contains_black = False
         for pixel_value in first_selected_screenshot.getdata():
             if pixel_value == 0:
                 contains_black = True
                 break
         if contains_black:
-            self._center_popup(CTkMessagebox(title="Info", icon=resource_path('Assets\\info.png'), message="Please hover over the first Compendium entry."))
+            self._center_popup(CTkMessagebox(title="Info", icon=resource_path('Assets\\info.png'),
+                                             message="Please hover over the first Compendium entry."))
             return False
         return True
 
     def scan_compendium(self):
         self._scan_in_progress = True
         personas = []
-        x1 = 410
-        y1 = 280  # 250
-        x2 = 730
-        y2 = 335
-        height = 75
+        x1 = 410 * self._x_modifier
+        y1 = 280 * self._y_modifier  # 250
+        x2 = 730 * self._x_modifier
+        y2 = 335 * self._y_modifier
+        height = 75 * self._y_modifier
+        x_offset = 16 * self._x_modifier
 
-        lvl_x = 328  # 325
-        lvl_y = 302  # 300
+        lvl_x = 328 * self._x_modifier  # 325
+        lvl_y = 302 * self._y_modifier  # 300
 
-        price_x = 790
-        price_y = 250
+        price_x = 790 * self._x_modifier
+        price_y = 250 * self._y_modifier
 
-        check_box = self.take_screenshot({"top": 710, "left": 1000, "width": 1, "height": 1})
+        check_box = self.take_screenshot({"top": int(710*self._y_modifier),
+                                          "left": int(1000*self._x_modifier),
+                                          "width": 1,
+                                          "height": 1})
         started_scroll = False
         i = 0
         self._num_detected = 0
@@ -94,20 +112,29 @@ class CompendiumScanner:
 
             # takes a screenshot to the right of the second bottom most persona to check it for red color
             # it will only not be red for the first 6 entries or once the end has been reached
-            check_box = self.take_screenshot({"top": 687, "left": 1080, "width": 1, "height": 1})
-            last_check_box = self.take_screenshot({"top": 760, "left": 1080, "width": 1, "height": 1})
+            check_box = self.take_screenshot({"top": int(687*self._y_modifier),
+                                              "left": int(1080*self._x_modifier),
+                                              "width": 1,
+                                              "height": 1})
+            last_check_box = self.take_screenshot({"top": int(760*self._y_modifier),
+                                                   "left": int(1080*self._x_modifier),
+                                                   "width": 1,
+                                                   "height": 1})
 
             # check is last compendium entry has been reached
             if not _contains_red(check_box) and _contains_red(last_check_box):
                 y1 += height
                 y2 += height
                 lvl_y += height
-                x1 += 16
-                x2 += 16
-                lvl_x += 16
+                x1 += x_offset
+                x2 += x_offset
+                lvl_x += x_offset
 
             # persona name label screenshot
-            im = self.take_screenshot({"top": y1, "left": x1, "width": x2 - x1, "height": y2 - y1})
+            im = self.take_screenshot({"top": int(y1),
+                                       "left": int(x1),
+                                       "width": int(x2 - x1),
+                                       "height": int(y2 - y1)})
             im = im.convert('L')
             im = PIL.ImageOps.invert(im)
             i += 1
@@ -124,13 +151,19 @@ class CompendiumScanner:
                 text = self._find_closest_match(text)
 
             # persona level label screenshot
-            lvl = self.take_screenshot({"top": lvl_y, "left": lvl_x, "width": 45, "height": 46})
+            lvl = self.take_screenshot({"top": int(lvl_y),
+                                        "left": int(lvl_x),
+                                        "width": int(45*self._x_modifier),
+                                        "height": int(46*self._y_modifier)})
             lvl = PIL.ImageOps.invert(lvl)
             lvl = _non_black_to_white(lvl).convert('RGBA').rotate(-6, resample=Image.BICUBIC,
                                                                   fillcolor=(255, 255, 255))
 
             # persona price label screenshot
-            price = self.take_screenshot({"top": price_y, "left": price_x, "width": 200, "height": 60})
+            price = self.take_screenshot({"top": int(price_y),
+                                          "left": int(price_x),
+                                          "width": int(200*self._x_modifier),
+                                          "height": int(60*self._y_modifier)})
             price = PIL.ImageOps.invert(price)
             price = _non_black_to_white(price).convert('RGBA').rotate(-6, resample=Image.BICUBIC,
                                                                       fillcolor=(255, 255, 255))
@@ -141,10 +174,10 @@ class CompendiumScanner:
                 y2 += height
                 lvl_y += height
                 price_y += height
-                x1 += 16
-                x2 += 16
-                lvl_x += 16
-                price_x += 16
+                x1 += x_offset
+                x2 += x_offset
+                lvl_x += x_offset
+                price_x += x_offset
             else:
                 started_scroll = True
 
@@ -258,6 +291,24 @@ class CompendiumScanner:
         elif result == "Orpheus Picaro" and self.orpheus_picaro_f:
             result = "Orpheus F Picaro"
         return result
+
+    def _get_main_monitor(self):
+        for m in get_monitors():
+            if m.is_primary:
+                return m
+
+    def _monitor_setup(self):
+        main_monitor = self._get_main_monitor()
+        width = main_monitor.width
+        height = main_monitor.height
+        self._x_modifier = width / 1920
+        self._y_modifier = height / 1080
+        for box in self._screenshot_boxes:
+            box["left"] = int(box["left"] * self._x_modifier)
+            box["top"] = int(box["top"] * self._y_modifier)
+            box["width"] = int(box["width"] * self._x_modifier)
+            box["height"] = int(box["height"] * self._y_modifier)
+        print(self._screenshot_boxes)
 
 
 def _contains_red(image):

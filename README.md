@@ -1,7 +1,6 @@
 # Persona 5 Royal Fusion Helper
 
 ## Scanning the compendium
-At this point in time this feature will only work with 1080p monitors.<br>
 Scanning takes screenshots of your Compendium and utilizes Tesseract OCR to determine the name, price and current level of all owned Personas. The number recognition can be a bit faulty in rare cases but to mitigate this all scanned levels which are lower than the Persona's base level will be ignored.
 Pressing ESC during the scan will abort it.
 
@@ -20,7 +19,8 @@ Left-clicking on any Node will open a pop-up which will show the name, base leve
 
 ![slink](./example_gifs/persona_info.gif)
 ### Changing fusion recipe
-Right-clicking on any node will highlight it red. The recipe for the selected Persona can be changed be using the arrow-buttons next to "Check" and the graph will change accordingly. If the arrows remain disabled it means there no more recipes available.
+Right-clicking on any node will highlight it red. The recipe for the selected Persona can be changed be using the arrow-buttons next to "Check" and the graph will change accordingly.
+If the arrows remain disabled it means there no more recipes available.
 
 
 ![slink](./example_gifs/change_recipe.gif)

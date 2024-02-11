@@ -69,21 +69,12 @@ class FileReader:
                 if (p1.treasure_demon and not p2.treasure_demon) or (p2.treasure_demon and not p1.treasure_demon):
                     continue
 
-                result_arcana = ""
-                for combo in Data5Royal.arcana2CombosRoyal:
-                    if combo['source'] == [p1.arcana, p2.arcana] or combo['source'] == [p2.arcana, p1.arcana]:
-                        result_arcana = combo['result']
-                        break
-                result_level = (p1.level + p2.level) / 2
-                result_level += 1 if result_level.is_integer() else 0.5
-
-                if result_arcana != "":
-                    persona = self.forward_fusion(p1.name, p2.name)
-                    if persona is not None:
-                        if persona.name in reverse_fusion_map.keys():
-                            reverse_fusion_map.get(persona.name).append((p1.name, p2.name))
-                        else:
-                            reverse_fusion_map[persona.name] = [(p1.name, p2.name)]
+                persona = self.forward_fusion(p1.name, p2.name)
+                if persona is not None:
+                    if persona.name in reverse_fusion_map.keys():
+                        reverse_fusion_map.get(persona.name).append((p1.name, p2.name))
+                    else:
+                        reverse_fusion_map[persona.name] = [(p1.name, p2.name)]
 
         # print(reverse_fusion_map)
         # print(len(reverse_fusion_map))

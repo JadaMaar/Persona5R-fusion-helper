@@ -34,7 +34,7 @@ To avoid the need to scan the Compendium again or open the Compendium window and
 Both of these features aren't static like regular Persona fusions due to both of them being dependent on the Personas current level. Therefor those can only reliably be determined by using the "Scan Compendium" function which will scan the current level and current price of each Persona as well. If a Persona is added manually via the Compendium menu or the "Add Persona(s)"-Button they will have their base level as their current level and ¥0 as their price. 
  
 ### Min price calculation
-This button will compare the cost of all possible combinations that result the currently shown Persona and shows the one
+This button will compare the cost of all possible combinations that result in the currently shown Persona and shows the one
 with the cheapest total cost.
 
 NOTE: This tool does NOT actually calculate ALL possible recipes for every Persona. It stops after the first set of possible combinations to avoid potential loops in the graph.

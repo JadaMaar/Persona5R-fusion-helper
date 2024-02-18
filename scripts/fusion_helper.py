@@ -1,6 +1,5 @@
 import os
 from time import time, sleep
-
 import matplotlib.pyplot as plt
 import pygetwindow as gw
 from CTkMessagebox import CTkMessagebox
@@ -38,6 +37,7 @@ class FusionHelper:
         self._pos = None
         self._current_indices = {}
         self._current_result = ""
+        self._min_cost_cache = dict()
         self._dropdown = None
         self._graph_generator = GraphGenerator(self.plotframe, self.persona_map)
 
@@ -255,6 +255,12 @@ class FusionHelper:
         return [node for node in current_graph.nodes() if current_graph.in_degree(node) == 0]
 
     def calculate_cheapest_fusion(self, target_persona):
+        if target_persona == self._current_result:
+            self._min_cost_cache = dict()
+
+        if target_persona in self._min_cost_cache:
+            return self._min_cost_cache[target_persona]
+
         p = self.persona_map[target_persona]
         if p.owned:
             return p.cost, {target_persona: 0}
@@ -265,12 +271,14 @@ class FusionHelper:
             cost = 0
             maps = {}
             for p in combo:
-                cost += self.calculate_cheapest_fusion(p)[0]
-                maps = maps | self.calculate_cheapest_fusion(p)[1]
+                p_min = self.calculate_cheapest_fusion(p)
+                cost += p_min[0]
+                maps = maps | p_min[1]
             mats_cost.append(cost)
             index_map.append(maps)
         min_cost = min(mats_cost)
         index = mats_cost.index(min_cost)
+        self._min_cost_cache[target_persona] = min_cost, {target_persona: index} | index_map[index]
         return min_cost, {target_persona: index} | index_map[index]
 
     def save_compendium(self):

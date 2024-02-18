@@ -78,8 +78,10 @@ def thread_scan_compendium():
     app.attributes('-topmost', False)
 
 
-def check_fusion(name, index={}):
+def check_fusion(name, index=None):
     global result_index, max_index, index_dict
+    if not index:
+        index = dict()
     result_index = 0
     index_dict = index
     max_index = helper.can_fuse(target_persona=name, indices=index_dict)

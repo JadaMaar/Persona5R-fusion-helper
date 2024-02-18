@@ -31,6 +31,7 @@ class Compendium(CTkToplevel):
         self.apply_button = CTkButton(self, text="Apply", command=lambda: self._apply())
         self.apply_button.pack(padx=10, pady=10)
         self.persona_checkboxes = {}
+        self.info_to_tooltip = dict()
         self.labels = []
         self._init_checkboxes(compendium)
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
@@ -46,7 +47,9 @@ class Compendium(CTkToplevel):
             self.labels.append(info)
 
             cost = locale.currency(p.cost, grouping=True) if p.cost > 0 else 'N/A'
-            CTkToolTip(info, message=f'lvl: {p.current_level} | cost: {cost}')
+            tooltip = CTkToolTip(info, message=f'lvl: {p.current_level} | cost: {cost}')
+            self.info_to_tooltip[info] = tooltip
+
             self.persona_checkboxes[p.name] = combo
             if p.owned:
                 box.select()
@@ -57,6 +60,9 @@ class Compendium(CTkToplevel):
         for name, box in self.persona_checkboxes.items():
             if self.compendium[name].owned:
                 box.winfo_children()[0].select()
+                info = box.winfo_children()[1]
+                cost = locale.currency(self.compendium[name].cost, grouping=True) if self.compendium[name].cost > 0 else 'N/A'
+                self.info_to_tooltip[info].configure(message=f'lvl: {self.compendium[name].current_level} | cost: {cost}')
             else:
                 box.winfo_children()[0].deselect()
 

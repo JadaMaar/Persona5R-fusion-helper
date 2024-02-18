@@ -42,12 +42,15 @@ class PersonaInfo(CTkToplevel):
     def _close(self):
         # self.update()
         position = mouse.get_position()
-        x_min = self.winfo_x()
-        x_max = x_min + self.winfo_width()
-        y_min = self.winfo_y()
-        y_max = y_min + self.winfo_height()
-        if not x_min <= position[0] <= x_max or not y_min <= position[1] <= y_max:
-            self._on_closing()
+        try:
+            x_min = self.winfo_x()
+            x_max = x_min + self.winfo_width()
+            y_min = self.winfo_y()
+            y_max = y_min + self.winfo_height()
+            if not x_min <= position[0] <= x_max or not y_min <= position[1] <= y_max:
+                self._on_closing()
+        except:
+            print("window already closed")
 
     def _on_closing(self):
         mouse.unhook(self._hook)
